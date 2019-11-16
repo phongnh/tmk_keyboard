@@ -321,6 +321,7 @@ MSG_COFF = Converting to AVR COFF:
 MSG_EXTENDED_COFF = Converting to AVR Extended COFF:
 MSG_FLASH = Creating load file for Flash:
 MSG_EEPROM = Creating load file for EEPROM:
+MSG_BIN = Creating binary load file for flashing:
 MSG_EXTENDED_LISTING = Creating Extended Listing:
 MSG_SYMBOL_TABLE = Creating Symbol Table:
 MSG_LINKING = Linking:
@@ -360,13 +361,14 @@ ALL_ASFLAGS = -mmcu=$(MCU) -x assembler-with-cpp $(ASFLAGS) $(EXTRAFLAGS)
 all: begin gccversion sizebefore build sizeafter end
 
 # Change the build target to build a HEX file or a library.
-build: elf hex eep lss sym
+build: elf hex eep bin lss sym
 #build: lib
 
 
 elf: $(TARGET).elf
 hex: $(TARGET).hex
 eep: $(TARGET).eep
+bin: $(TARGET).bin
 lss: $(TARGET).lss
 sym: $(TARGET).sym
 LIBNAME=lib$(TARGET).a
@@ -520,6 +522,12 @@ extcoff: $(TARGET).elf
 	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
 	--change-section-lma .eeprom=0 --no-change-warnings -O $(FORMAT) $< $@ || exit 0
 
+%.bin: %.elf
+	@echo
+	@echo $(MSG_BIN) $@
+	$(OBJCOPY) -O binary $< $@
+	mv hhkb_ble.bin HHKB_BLE.BIN
+
 # Create extended listing file from ELF output file.
 %.lss: %.elf
 	@echo
@@ -598,6 +606,7 @@ clean_list :
 	@echo
 	$(REMOVE) $(TARGET).hex
 	$(REMOVE) $(TARGET).eep
+	$(REMOVE) $(TARGET).bin
 	$(REMOVE) $(TARGET).cof
 	$(REMOVE) $(TARGET).elf
 	$(REMOVE) $(TARGET).map
